@@ -1,28 +1,56 @@
 {% extends 'base.html' %}
 
+{% block css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+{% endblock %}
+
+{% block search %}
+<div class="search-container">
+  <form action="{{url_for('search')}}">
+    <input type="text" placeholder="Search.." name="search">
+    <button type="submit"><i class="fa fa-search"></i></button>
+  </form>
+</div>
+{% endblock %}
+
 {% block header %}
   <h1>{% block title %}Posts{% endblock %}</h1>
-  {% if g.user %}
-    <a class="action" href="{{ url_for('blog.create') }}">New</a>
-  {% endif %}
+    <a class="action" href="{{ url_for('create') }}">New</a>
 {% endblock %}
 
 {% block content %}
-  {% for post in posts %}
+  {% for post, username in posts %}
     <article class="post">
       <header>
         <div>
-          <h1>{{ post['title'] }}</h1>
-          <div class="about">by {{ post['username'] }} on {{ post['created'].strftime('%Y-%m-%d') }}</div>
+          <h1><a class="action" href="{{url_for('view', id=post.id_)}}">{{ post.title }}</a></h1>
+          <div class="about">by {{ username }} on {{ post.timestamp.strftime('%Y-%m-%d') }}</div>
         </div>
-        {% if g.user['id'] == post['author_id'] %}
-          <a class="action" href="{{ url_for('blog.update', id=post['id']) }}">Edit</a>
+        {% if user.id_ == post.user_id %}
+          <a href="{{ url_for('update', id=post.id_) }}">Edit</a>
         {% endif %}
       </header>
-      <p class="body">{{ post['body'] }}</p>
     </article>
     {% if not loop.last %}
       <hr>
     {% endif %}
   {% endfor %}
+{% endblock %}
+
+{% block pageinfo %}
+<div class="pagination">
+{% if pagenum > 1 %}
+  <a href="/{{pagenum-1}}">&lt;</a>
+{% endif %}
+{% for i in range(total_pages) %}
+  {% if pagenum == i+1 %}
+  <a class="active" href="#">{{i+1}}</a>
+  {% else %}
+  <a href="/{{i+1}}">{{i+1}}</a>
+  {% endif %}
+{% endfor %}
+{% if total_pages - pagenum > 0 %}
+  <a href="/{{pagenum+1}}">&gt;</a>
+{% endif %}
+</div>
 {% endblock %}
