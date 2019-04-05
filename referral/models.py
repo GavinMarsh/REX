@@ -210,6 +210,8 @@ def setup(DB_URL):
 if __name__ == "__main__":
     session = setup(DB_URL)
     session = get_debug_session(DB_URL)
+
+    # Adding some fake data to test
     d = date.today()
     for i in range(30):
         adminuser = User("test"+str(i), "test")
