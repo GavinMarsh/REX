@@ -16,11 +16,12 @@ from settings import (Key, post_limit)
 import pdb
 
 
-print("Setting up app...")
+print("Creating app...")
 app = Flask(__name__)
-app.secret_key = Key
 print("Creating database link and session...")
 db_session = scoped_session(sessionmaker(bind=engine))
+print("Configuring app...")
+app.secret_key = Key
 app.config["db_session"] = db_session
 app.register_blueprint(auth)
 app.register_blueprint(post)
