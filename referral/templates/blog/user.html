@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}{{ user.username }}{% endblock %}</h1>
+  {% if editable is sameas true %}
+    <a class="action" href="{{ url_for('user', id=user.id_, edit='edit') }}">Edit</a>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+    <article class="post">
+      {% if edit is sameas false %}
+        <h3>Description</h3>
+        <p class="body">{{ user.desc }}</p>
+
+        <h3>Referrals</h3>
+        <p>{{referrals}}</p>
+
+        <h3>Requests</h3>
+        <p>{{requests}}</p>
+
+        <h3>Awarded Requests</h3>
+        <p>{{awards}}</p>
+      {% else %}
+      <form method="post">
+        <label for="desc">Description</label>
+        <textarea name="desc" id="desc" required>{{user.desc}}</textarea>
+        <input type="submit" value="Save">
+      </form>
+      {% endif %}
+
+    </article>
+
+
+{% endblock %}

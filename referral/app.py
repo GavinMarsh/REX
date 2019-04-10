@@ -1,37 +1,29 @@
-import functools
 import sys
-from datetime import datetime
 
 from flask import (
-    Flask, flash, redirect, render_template,
+    Flask, redirect, render_template,
     request, url_for, abort, session
 )
 from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
 
 from math import ceil
-from models import (User, Referral)
-from settings import (Key, DB_URL, post_limit)
+from models import (User, Referral, Request, Awarded)
+from models import engine
+from auth import auth, login_required
+from post import post
+from settings import (Key, post_limit)
+import pdb
 
 
 print("Setting up app...")
 app = Flask(__name__)
 app.secret_key = Key
 print("Creating database link and session...")
-engine = create_engine(DB_URL)
 db_session = scoped_session(sessionmaker(bind=engine))
-
-
-def login_required(view):
-    """View decorator that redirects anonymous users to the login page."""
-    @functools.wraps(view)
-    def wrapped_view(**kwargs):
-        if "user_id" not in session:
-            return redirect(url_for('login'))
-        return view(**kwargs)
-
-    return wrapped_view
+app.config["db_session"] = db_session
+app.register_blueprint(auth)
+app.register_blueprint(post)
 
 
 def get_user(user_id, db_session):
@@ -75,147 +67,32 @@ def search():
     pass
 
 
-@app.route('/create', methods=['GET', 'POST'])
+@app.route('/user/<int:id>', methods=['GET'])
+@app.route('/user/<int:id>/<string:edit>', methods=['GET', 'POST'])
 @login_required
-def create():
-    """Create a new post for the current user."""
+def user(id, edit=""):
+    """User page"""
+    if edit not in ["", "edit"]:
+        abort(405)
     user = get_user(session.get("user_id"), db_session)
-    if request.method == 'POST':
-        content = {}
-        content["user_id"] = user.id_
-        content["title"] = request.form['title']
-        content["enum"] = request.form['enum']
-        content["turnover"] = request.form['turnover']
-        pdate = request.form['project_date']
-        content["project_date"] = datetime.strptime(pdate, "%Y-%m-%d").date()
-        content["budget"] = request.form['budget']
-        content["description"] = request.form['desc']
+    editable = id is user.id_
+    edit = edit.strip() == "edit"
 
-        referral = Referral(**content)
-        db_session.add(referral)
-        db_session.commit()
-        return redirect(url_for('index'))
-
-    return render_template('blog/create.html', user=user)
-
-
-@app.route('/view/<int:id>', methods=['GET'])
-@login_required
-def view(id):
-    """View a post"""
-    post = db_session.query(Referral).filter(Referral.id_ == id).first()
-    user = get_user(session.get("user_id"), db_session)
-    if post is None:
-        abort(404)
-    post_user = get_user(post.user_id, db_session)
-
-    return render_template('blog/post.html', post=post, user=user, post_user=post_user)
-
-
-@app.route('/update/<int:id>', methods=['GET', 'POST'])
-@login_required
-def update(id):
-    """Update a post if the current user is the author."""
-    post = db_session.query(Referral).filter(Referral.id_ == id).first()
-    user = get_user(session.get("user_id"), db_session)
-    if post is None:
-        abort(404)
-    if user.id_ != post.user_id:
+    if not editable and edit:
         abort(405)
 
-    if request.method == 'POST':
-        content = {}
-        content["title"] = request.form['title']
-        content["enum"] = request.form['enum']
-        content["turnover"] = request.form['turnover']
-        pdate = request.form['project_date']
-        content["project_date"] = datetime.strptime(pdate, "%Y-%m-%d").date()
-        content["budget"] = request.form['budget']
-        content["description"] = request.form['desc']
-
-        post.update(**content)
+    if request.method == "POST":
+        desc = request.form["desc"]
+        user.desc = desc
         db_session.commit()
-        return redirect(url_for('index'))
+        return redirect(url_for('user', id=id))
 
-    return render_template('blog/update.html', post=post, user=user)
+    requests = db_session.query(Request).filter(Request.user_id == user.id_).count()
+    awards = db_session.query(Awarded).filter(Awarded.user_id == user.id_).count()
+    referrals = db_session.query(Referral).filter(Referral.user_id == user.id_).count()
 
-
-@app.route('/delete/<int:id>', methods=['POST'])
-@login_required
-def delete(id):
-    """Delete a post if current user is author."""
-    post = db_session.query(Referral).filter(Referral.id_ == id).first()
-    user = get_user(session.get("user_id"), db_session)
-    if post is None:
-        abort(404)
-    if user.id_ != post.user_id:
-        abort(405)
-
-    db_session.delete(post)
-    db_session.commit()
-    return redirect(url_for('index'))
-
-
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    """Register a new user."""
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        error = None
-
-        if not username:
-            error = 'Username is required.'
-        elif not password:
-            error = 'Password is required.'
-
-        user = db_session.query(User).filter(User.username == username).first()
-        if user is not None:
-            error = 'User {0} is already registered.'.format(username)
-
-        if error is None:
-            user = User(username, password)
-            db_session.add(user)
-            db_session.commit()
-            return redirect(url_for('login'))
-
-        flash(error)
-
-    return render_template('auth/register.html')
-
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    """Log in a registered user by adding the user id to the session."""
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        error = None
-        user = db_session.query(User).filter(User.username == username).first()
-
-        if user is None:
-            error = 'Incorrect username.'
-        else:
-            user = user[0]
-            if not user.validate_password(password):
-                error = 'Incorrect password.'
-
-        if error is None:
-            # store the user id in a new session and return to the index
-            session.clear()
-            session['user_id'] = user.id_
-            return redirect(url_for('index'))
-
-        flash(error)
-
-    return render_template('auth/login.html')
-
-
-@app.route('/logout')
-def logout():
-    """Clear the current session, including the stored user id."""
-    session.clear()
-    return redirect(url_for('index'))
+    return render_template('blog/user.html', user=user, requests=requests, referrals=referrals,
+                           awards=awards, edit=edit, editable=editable)
 
 
 if __name__ == "__main__":

@@ -11,7 +11,14 @@
           <div class="about">by {{ post_user.username }} on {{ post.timestamp.strftime('%Y-%m-%d') }}</div>
         </div>
         {% if user.id_ == post.user_id %}
-          <a class="action" href="{{ url_for('update', id=post.id_) }}">Edit</a>
+          <a class="action" href="{{ url_for('post.update', id=post.id_) }}">Edit</a>
+        {% endif %}
+        {% if post_user.id_ != user.id_ %}
+          {% if has_requested is sameas true %}
+            <a class="action" href="{{ url_for('post.unrequest_post', post_id=post.id_) }}">Unrequest</a>
+          {% else %}
+            <a class="action" href="{{ url_for('post.request_post', post_id=post.id_) }}">Request</a>
+          {% endif %}
         {% endif %}
       </header>
 
@@ -29,5 +36,16 @@
 
       <h3>Description</h3>
       <p class="body">{{ post.description }}</p>
+    </article>
+
+    <article class="post">
+      <header>
+        <div>
+          <hr><h2>Requests:</h2>
+          {% for r in requests %}
+            Requested by <a href="{{ url_for('user', id=r.id_) }}">{{r.username}}</a><br>
+          {% endfor %}
+        </div>
+      </header>
     </article>
 {% endblock %}

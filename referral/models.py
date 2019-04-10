@@ -9,6 +9,7 @@ from sqlalchemy.orm import sessionmaker, relationship
 from datetime import date
 
 Base = declarative_base()
+engine = create_engine(DB_URL)
 
 
 class User(Base):
@@ -22,11 +23,13 @@ class User(Base):
     id_ = Column(Integer, primary_key=True)
     username = Column(String(20), unique=True)
     password = Column(String(20))
+    desc = Column(String(100))
 
     def __init__(self, username, password):
         """Create new instance."""
         self.username = username
         self.password = bcrypt.encrypt(password)
+        self.desc = ""
 
     def validate_password(self, password):
         """Check encrypted password."""
@@ -97,7 +100,7 @@ class Request(Base):
 
     id_ = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id_"))
-    post_id = Column(Integer, ForeignKey("referral.id_"))
+    post_id = Column(Integer, ForeignKey("referral.id_", ondelete='CASCADE'))
 
     def __init__(self, user_id, post_id):
         """Create new instance."""
@@ -115,7 +118,7 @@ class Tag(Base):
     __tablename__ = "tag"
 
     id_ = Column(Integer, primary_key=True)
-    post_id = Column(Integer, ForeignKey("referral.id_"))
+    post_id = Column(Integer, ForeignKey("referral.id_", ondelete='CASCADE'))
     tag_name = Column(String(100), unique=True)
 
     def __init__(self, post_id, tag_name):
@@ -187,7 +190,6 @@ class Awarded(Base):
 
 def get_debug_session(DB_URL):
     """Get a DB session for debugging."""
-    engine = create_engine(DB_URL)
     Session = sessionmaker(bind=engine)
     session = Session()
     return session
@@ -196,7 +198,6 @@ def get_debug_session(DB_URL):
 def setup(DB_URL):
     """Setup."""
     # Create database tables
-    engine = create_engine(DB_URL)
     Base.metadata.create_all(engine)
     Session = sessionmaker(bind=engine)
     session = Session()
