@@ -8,6 +8,8 @@ from passlib.hash import bcrypt
 from sqlalchemy.orm import sessionmaker, relationship
 from datetime import date
 
+from settings import tags
+
 Base = declarative_base()
 engine = create_engine(DB_URL)
 
@@ -15,7 +17,7 @@ engine = create_engine(DB_URL)
 class User(Base):
     """Model for Users.
 
-    Each user has a username and password that matches with their ubuntu login IDs.
+    Each user has a username and password.
     """
 
     __tablename__ = "users"
@@ -41,7 +43,7 @@ class User(Base):
 
 
 class Referral(Base):
-    """Model prefered songs of a user."""
+    """Model for a post/referral"""
 
     __tablename__ = "referral"
 
@@ -56,8 +58,9 @@ class Referral(Base):
     description = Column(String(2500))
 
     request = relationship("Request", cascade="all,delete", backref="request")
-    tag = relationship("Tag", cascade="all,delete", backref="tag")
+    tag = relationship("Tags", cascade="all,delete", backref="tags")
     comment = relationship("Comment", cascade="all,delete", backref="comment")
+    award = relationship("Awarded", cascade="all,delete", backref="award")
 
     def __init__(self, user_id, title, turnover, budget, project_date, description, enum):
         """Create new instance."""
@@ -94,7 +97,7 @@ class Referral(Base):
 
 
 class Request(Base):
-    """Model for Genre Profile."""
+    """Model for Request."""
 
     __tablename__ = "request"
 
@@ -113,26 +116,43 @@ class Request(Base):
 
 
 class Tag(Base):
-    """Model for Genre Profile."""
+    """Model for Tag."""
 
     __tablename__ = "tag"
 
     id_ = Column(Integer, primary_key=True)
-    post_id = Column(Integer, ForeignKey("referral.id_", ondelete='CASCADE'))
     tag_name = Column(String(100), unique=True)
 
-    def __init__(self, post_id, tag_name):
+    def __init__(self, tag_name):
         """Create new instance."""
-        self.post_id = post_id
         self.tag_name = tag_name
 
     def __repr__(self):
         """Verbose object name."""
-        return "<tag='%s', postid='%s'>" % (self.tag_name, self.post_id)
+        return "<tag='%s'>" % (self.tag_name)
+
+
+class Tags(Base):
+    """Model for linking tags to posts."""
+
+    __tablename__ = "tags"
+
+    id_ = Column(Integer, primary_key=True)
+    post_id = Column(Integer, ForeignKey("referral.id_", ondelete='CASCADE'))
+    tag_id = Column(Integer, ForeignKey("tag.id_", ondelete='CASCADE'))
+
+    def __init__(self, post_id, tag_id):
+        """Create new instance."""
+        self.post_id = post_id
+        self.tag_id = tag_id
+
+    def __repr__(self):
+        """Verbose object name."""
+        return "<tag='%s', postid='%s'>" % (self.tag_id, self.post_id)
 
 
 class Comment(Base):
-    """Model for Genre Profile."""
+    """Model for Comments"""
 
     __tablename__ = "comment"
 
@@ -153,7 +173,7 @@ class Comment(Base):
 
 
 class Alert(Base):
-    """Model for Genre Profile."""
+    """Model for subscribing to new posts"""
 
     __tablename__ = "alert"
 
@@ -170,13 +190,13 @@ class Alert(Base):
 
 
 class Awarded(Base):
-    """Model for Genre Profile."""
+    """Model for awarding posts"""
 
     __tablename__ = "award"
 
     id_ = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id_"))
-    post_id = Column(Integer, ForeignKey("referral.id_"))
+    post_id = Column(Integer, ForeignKey("referral.id_", ondelete='CASCADE'))
 
     def __init__(self, user_id, post_id):
         """Create new instance."""
@@ -202,9 +222,15 @@ def setup(DB_URL):
     Session = sessionmaker(bind=engine)
     session = Session()
     # Add test
-    adminuser = User("test", "test")
-    session.add(adminuser)
+    testuser = User("test", "test")
+    session.add(testuser)
     session.commit()
+    # Add tags
+    for t in tags:
+        tag = Tag(t)
+        session.add(tag)
+    session.commit()
+
     return session
 
 
@@ -215,11 +241,11 @@ if __name__ == "__main__":
     # Adding some fake data to test
     d = date.today()
     for i in range(30):
-        adminuser = User("test"+str(i), "test")
-        session.add(adminuser)
+        testuser = User("test"+str(i), "test")
+        session.add(testuser)
     session.commit()
     for i in range(1, 31):
-        adminuser = Referral(i, "Testing", "40000", "40000", d, "Testing project", "224RDF")
-        session.add(adminuser)
+        testuser = Referral(i, "Testing", "40000", "40000", d, "Testing project", "224RDF")
+        session.add(testuser)
     session.commit()
     pdb.set_trace()

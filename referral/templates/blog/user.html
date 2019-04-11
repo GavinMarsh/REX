@@ -21,6 +21,13 @@
 
         <h3>Awarded Requests</h3>
         <p>{{awards}}</p>
+
+        <h3>Subscribed to alerts</h3>
+        {% if alert %}
+          <p>Yes (<a class="action" href="{{ url_for('subscribe', argument='U') }}">Unsubscribe</a>)</p>
+        {% else %}
+          <p>No (<a class="action" href="{{ url_for('subscribe', argument='S') }}">Subscribe</a>)</p>
+        {% endif %}
       {% else %}
       <form method="post">
         <label for="desc">Description</label>

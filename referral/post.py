@@ -1,12 +1,13 @@
 from flask import current_app, Blueprint
-from models import (User, Referral, Request)
+from models import (User, Referral, Request, Tag,
+                    Tags, Awarded, Comment)
 from auth import login_required
 from flask import (
     redirect, render_template,
     request, url_for, session, abort
 )
 from datetime import datetime
-import pdb
+
 post = Blueprint('post', __name__, template_folder='templates')
 
 
@@ -60,12 +61,25 @@ def view(id):
 
     has_requested = user.id_ in r_uids
     request_users = db_session.query(User).filter(User.id_.in_(r_uids)).all()
-    comment_users = db_session.query(User).filter(User.id_.in_(c_uids)).all()
+    comment_users = [db_session.query(User).filter(User.id_ == uid).one() for uid in c_uids]
     comments = [(post.comment[i], comment_users[i]) for i in range(len(post.comment))]
 
+    tagged = post.tag[0] if len(post.tag) > 0 else None
+    awarded = post.award[0] if len(post.award) > 0 else None
+    tags = []
+
+    if tagged:
+        tagged = db_session.query(Tag).filter(Tag.id_ == tagged.tag_id).one()
+    else:
+        tags = db_session.query(Tag).all()
+
+    if awarded:
+        awarded = db_session.query(User).filter(User.id_ == awarded.user_id).one()
+
     return render_template('blog/post.html', post=post, user=user,
-                           post_user=post_user, requests=request_users, tags=post.tag,
-                           comments=comments, has_requested=has_requested)
+                           post_user=post_user, requests=request_users, tags=tags,
+                           comments=comments, has_requested=has_requested, tagged=tagged,
+                           awarded=awarded)
 
 
 @post.route('/update/<int:id>', methods=['GET', 'POST'])
@@ -95,6 +109,23 @@ def update(id):
         return redirect(url_for('index'))
 
     return render_template('blog/update.html', post=post, user=user)
+
+
+@post.route('/delete/<int:id>', methods=['POST'])
+@login_required
+def delete(id):
+    """Delete a post if current user is author."""
+    db_session = current_app.config["db_session"]
+    post = db_session.query(Referral).filter(Referral.id_ == id).first()
+    user = db_session.query(User).filter(User.id_ == session.get("user_id")).one()
+    if post is None:
+        abort(404)
+    if user.id_ != post.user_id:
+        abort(405)
+
+    db_session.delete(post)
+    db_session.commit()
+    return redirect(url_for('index'))
 
 
 @post.route('/request_post/<int:post_id>', methods=['GET'])
@@ -135,18 +166,130 @@ def unrequest_post(post_id):
     return redirect(url_for('post.view', id=post.id_))
 
 
-@post.route('/delete/<int:id>', methods=['POST'])
+@post.route('/tag_post/<int:post_id>', methods=['POST'])
 @login_required
-def delete(id):
-    """Delete a post if current user is author."""
+def tag_post(post_id):
+    """Update a post if the current user is the author."""
     db_session = current_app.config["db_session"]
-    post = db_session.query(Referral).filter(Referral.id_ == id).first()
+    post = db_session.query(Referral).filter(Referral.id_ == post_id).first()
     user = db_session.query(User).filter(User.id_ == session.get("user_id")).one()
     if post is None:
         abort(404)
     if user.id_ != post.user_id:
         abort(405)
 
-    db_session.delete(post)
+    tag_id = int(request.form["tag"])
+    tag = db_session.query(Tag).filter(Tag.id_ == tag_id).first()
+    if not tag:
+        abort(405)
+
+    tagged = db_session.query(Tags).filter(Tags.post_id == post_id).first()
+    if tagged:
+        abort(405)
+
+    tagged = Tags(post_id, tag_id)
+    db_session.add(tagged)
     db_session.commit()
-    return redirect(url_for('index'))
+    return redirect(url_for('post.view', id=post.id_))
+
+
+@post.route('/untag_post/<int:post_id>', methods=['GET'])
+@login_required
+def untag_post(post_id):
+    """Update a post if the current user is the author."""
+    db_session = current_app.config["db_session"]
+    post = db_session.query(Referral).filter(Referral.id_ == post_id).first()
+    user = db_session.query(User).filter(User.id_ == session.get("user_id")).one()
+    if post is None:
+        abort(404)
+    if user.id_ != post.user_id:
+        abort(405)
+
+    tagged = db_session.query(Tags).filter(Tags.post_id == post_id).first()
+    if not tagged:
+        abort(405)
+
+    db_session.delete(tagged)
+    db_session.commit()
+    return redirect(url_for('post.view', id=post.id_))
+
+
+@post.route('/award_post/<int:post_id>', methods=['POST'])
+@login_required
+def award_post(post_id):
+    """Search: Filter post by user"""
+    db_session = current_app.config["db_session"]
+    post = db_session.query(Referral).filter(Referral.id_ == post_id).first()
+    user = db_session.query(User).filter(User.id_ == session.get("user_id")).one()
+    if post is None:
+        abort(404)
+    if user.id_ != post.user_id:
+        abort(405)
+    awarded = len(post.award) > 0
+    if awarded:
+        abort(405)
+
+    user_id = int(request.form["award"])
+    user = db_session.query(User).filter(User.id_ == user_id).first()
+    if not user:
+        abort(405)
+
+    award = Awarded(user.id_, post_id)
+    db_session.add(award)
+    db_session.commit()
+    return redirect(url_for('post.view', id=post.id_))
+
+
+@post.route('/unaward_post/<int:post_id>', methods=['GET'])
+@login_required
+def unaward_post(post_id):
+    """Search: Filter post by user"""
+    db_session = current_app.config["db_session"]
+    post = db_session.query(Referral).filter(Referral.id_ == post_id).first()
+    user = db_session.query(User).filter(User.id_ == session.get("user_id")).one()
+    if post is None:
+        abort(404)
+    if user.id_ != post.user_id:
+        abort(405)
+    awarded = len(post.award) > 0
+    if not awarded:
+        abort(405)
+
+    award = post.award[0]
+    db_session.delete(award)
+    db_session.commit()
+    return redirect(url_for('post.view', id=post.id_))
+
+
+@post.route('/add_comment/<int:post_id>', methods=['POST'])
+@login_required
+def add_comment(post_id):
+    """Search: Filter post by user"""
+    db_session = current_app.config["db_session"]
+    post = db_session.query(Referral).filter(Referral.id_ == post_id).first()
+    user = db_session.query(User).filter(User.id_ == session.get("user_id")).one()
+    if post is None:
+        abort(404)
+
+    comment = request.form["comment"]
+    comment = Comment(user.id_, post.id_, comment)
+    db_session.add(comment)
+    db_session.commit()
+    return redirect(url_for('post.view', id=post.id_))
+
+
+@post.route('/delete_comment/<int:comment_id>/<int:post_id>', methods=['GET'])
+@login_required
+def delete_comment(comment_id, post_id):
+    """Search: Filter post by user"""
+    db_session = current_app.config["db_session"]
+    user = db_session.query(User).filter(User.id_ == session.get("user_id")).one()
+    comment = db_session.query(Comment).filter(Comment.id_ == comment_id).first()
+    if comment is None:
+        abort(404)
+    if user.id_ != comment.user_id:
+        abort(405)
+
+    db_session.delete(comment)
+    db_session.commit()
+    return redirect(url_for('post.view', id=post_id))

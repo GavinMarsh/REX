@@ -1,5 +1,9 @@
 {% extends 'base.html' %}
 
+{% block css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+{% endblock %}
+
 {% block header %}
   <h1>{% block title %}{{ post.title }}{% endblock %}</h1>
 {% endblock %}
@@ -8,18 +12,21 @@
     <article class="post">
       <header>
         <div>
-          <div class="about">by {{ post_user.username }} on {{ post.timestamp.strftime('%Y-%m-%d') }}</div>
+          <div class="about">
+            by <a href="{{ url_for('user', id=post_user.id_) }}">{{ post_user.username }}</a>
+            on {{ post.timestamp.strftime('%Y-%m-%d') }}</div>
         </div>
+
         {% if user.id_ == post.user_id %}
-          <a class="action" href="{{ url_for('post.update', id=post.id_) }}">Edit</a>
-        {% endif %}
-        {% if post_user.id_ != user.id_ %}
+        <a class="action" href="{{ url_for('post.update', id=post.id_) }}">Edit</a>
+        {% else %}
           {% if has_requested is sameas true %}
-            <a class="action" href="{{ url_for('post.unrequest_post', post_id=post.id_) }}">Unrequest</a>
+          <a class="action" href="{{ url_for('post.unrequest_post', post_id=post.id_) }}">Unrequest</a>
           {% else %}
-            <a class="action" href="{{ url_for('post.request_post', post_id=post.id_) }}">Request</a>
+          <a class="action" href="{{ url_for('post.request_post', post_id=post.id_) }}">Request</a>
           {% endif %}
         {% endif %}
+
       </header>
 
       <h3>Employee Number</h3>
@@ -38,6 +45,65 @@
       <p class="body">{{ post.description }}</p>
     </article>
 
+
+    <article>
+      {% if user.id_ == post.user_id %}
+
+        {% if awarded %}
+          <hr><h3>Award</h3>
+          <p class="body">
+            Referral has been awarded to <a href="{{ url_for('user', id=awarded.id_) }}">{{awarded.username}}</a>
+            <a href="{{ url_for('post.unaward_post', post_id=post.id_) }}"><i class="fa fa-times"></i></a>
+          </p>
+
+        {% else %}
+          <hr><h3>Award</h3>
+          <div class="dropdown">
+            <form action="{{url_for('post.award_post', post_id=post.id_)}}" method="post">
+              <select name="award" onchange="this.form.submit()">
+                <option value="">--Award referral--</option>
+                {% for r in requests %}
+                  <option value="{{r.id_}}">{{r.username}}</option>
+                {% endfor %}
+              </select>
+            </form>
+          </div>
+        {% endif %}
+
+        {% if tagged %}
+        <hr><h3>Tag</h3>
+        <p class="body">
+          <a href="{{ url_for('tag_search', tag_id=tagged.id_) }}">{{tagged.tag_name}}</a>
+          <a href="{{ url_for('post.untag_post', post_id=post.id_) }}"><i class="fa fa-times"></i></a>
+        </p>
+
+        {% else %}
+        <hr><h3>Tag</h3>
+          <div class="dropdown">
+            <form action="{{url_for('post.tag_post', post_id=post.id_)}}" method="post">
+              <select name="tag" onchange="this.form.submit()">
+                <option value="">--Tag referral--</option>
+                {% for t in tags %}
+                  <option value="{{t.id_}}">{{t.tag_name}}</option>
+                {% endfor %}
+              </select>
+            </form>
+          </div>
+        {% endif %}
+
+      {% else %}
+        {% if awarded %}
+          <hr><h3>Award</h3>
+          <p class="body">Referral has been awarded to <a href="{{ url_for('user', id=awarded.id_) }}">{{awarded.username}}</a></p>
+        {% endif %}
+
+        {% if tagged %}
+        <hr><h3>Tag</h3>
+        <p class="body"><a href="{{ url_for('tag_search', tag_id=tagged.id_) }}">{{tagged.tag_name}}</a></p>
+        {% endif %}
+      {% endif %}
+    </article>
+
     <article class="post">
       <header>
         <div>
@@ -47,5 +113,25 @@
           {% endfor %}
         </div>
       </header>
+
+      <header>
+        <div>
+          <hr><h2>Comments:</h2>
+          {% for p, u in comments %}
+            <label><a href="{{url_for('user', id=u.id_)}}">{{u.username}}</a>: </label>{{p.content}}
+            {% if u.id_ == user.id_ %}
+            <a href="{{ url_for('post.delete_comment', comment_id=p.id_, post_id=post.id_) }}"><i class="fa fa-times"></i></a>
+            {% endif %}
+            <br>
+          {% endfor %}
+          <!-- Add comments here -->
+          <form action="{{url_for('post.add_comment', post_id=post.id_)}}" method="post">
+            <label for="comment">New Comment</label>
+            <textarea name="comment" id="comment" placeholder="New comment" required></textarea>
+            <input type="submit" value="Post">
+          </form>
+        </div>
+      </header>
     </article>
+
 {% endblock %}

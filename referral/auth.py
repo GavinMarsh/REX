@@ -24,6 +24,11 @@ def login_required(view):
     def wrapped_view(**kwargs):
         if "user_id" not in session:
             return redirect(url_for('auth.login'))
+
+        db_session = current_app.config["db_session"]
+        user = db_session.query(User).filter(User.id_ == session.get("user_id")).first()
+        if user is None:
+            return redirect(url_for('auth.login'))
         return view(**kwargs)
 
     return wrapped_view

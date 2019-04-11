@@ -4,21 +4,14 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 {% endblock %}
 
-{% block search %}
-<div class="search-container">
-  <form action="{{url_for('search')}}">
-    <input type="text" placeholder="Search.." name="search">
-    <button type="submit"><i class="fa fa-search"></i></button>
-  </form>
-</div>
-{% endblock %}
-
 {% block header %}
-  <h1>{% block title %}Posts{% endblock %}</h1>
-    <a class="action" href="{{ url_for('post.create') }}">New</a>
+  <h1>{% block title %}Posts with tag: {{tag.tag_name}}{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
+  {% if no_posts is sameas false %}
+    <h4> No posts with this tag. </h4>
+  {% endif %}
   {% for post, username in posts %}
     <article class="post">
       <header>
@@ -40,17 +33,17 @@
 {% block pageinfo %}
 <div class="pagination">
 {% if pagenum > 1 %}
-  <a href="{{url_for('index', pagenum=pagenum-1) }}">&lt;</a>
+  <a href="{{url_for('tag_search', tag_id=tag.id_, pagenum=pagenum-1) }}">&lt;</a>
 {% endif %}
 {% for i in range(total_pages) %}
   {% if pagenum == i+1 %}
   <a class="active" href="#">{{i+1}}</a>
   {% else %}
-  <a href="{{url_for('index', pagenum=i+1)}}">{{i+1}}</a>
+  <a href="{{url_for('tag_search', tag_id=tag.id_, pagenum=i+1)}}">{{i+1}}</a>
   {% endif %}
 {% endfor %}
 {% if total_pages - pagenum > 0 %}
-  <a href="{{url_for('index', pagenum=pagenum+1)}}">&gt;</a>
+  <a href="{{url_for('tag_search', tag_id=tag.id_, pagenum=pagenum+1)}}">&gt;</a>
 {% endif %}
 </div>
 {% endblock %}
