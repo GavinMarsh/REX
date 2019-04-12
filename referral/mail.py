@@ -19,7 +19,7 @@ mail_settings = {
     "MAIL_USE_SSL": True,
     "MAIL_USERNAME": "referraltestingemail@gmail.com",
     "MAIL_PASSWORD": "referral",
-    "SITE_URL": "http://localhost:8088/"
+    "SITE_URL": "http://52.221.187.163:8088/"
 }
 
 app.config.update(mail_settings)
