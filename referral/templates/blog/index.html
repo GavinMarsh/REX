@@ -24,7 +24,7 @@
       <header>
         <div>
           <h1><a class="action" href="{{url_for('post.view', id=post.id_)}}">{{ post.title }}</a></h1>
-          <div class="about">by {{ username }} on {{ post.timestamp.strftime('%Y-%m-%d') }}</div>
+          <div class="about">by {{ username }} on {{ post.timestamp.strftime('%Y-%m-%d') }} at {{ post.timestamp.strftime('%H:%M') }}</div>
         </div>
         {% if user.id_ == post.user_id %}
           <a href="{{ url_for('post.update', id=post.id_) }}">Edit</a>

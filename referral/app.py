@@ -6,6 +6,7 @@ from flask import (
 )
 from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy import desc
 
 from math import ceil
 from models import (User, Referral, Request, Awarded,
@@ -13,8 +14,8 @@ from models import (User, Referral, Request, Awarded,
 from models import engine
 from auth import auth, login_required
 from post import post
+from rss import rss
 from settings import (Key, post_limit)
-import pdb
 
 
 print("Creating app...")
@@ -26,6 +27,7 @@ app.secret_key = Key
 app.config["db_session"] = db_session
 app.register_blueprint(auth)
 app.register_blueprint(post)
+app.register_blueprint(rss)
 
 
 def get_user(user_id, db_session):
@@ -34,7 +36,8 @@ def get_user(user_id, db_session):
 
 
 def get_all_posts(pagenum, db_session):
-    posts = db_session.query(Referral).offset((pagenum-1) * post_limit).limit(post_limit).all()
+    posts = db_session.query(Referral).order_by(desc(Referral.timestamp))
+    posts = posts.offset((pagenum-1) * post_limit).limit(post_limit).all()
     users_posts = []
     for p in posts:
         up = (p, db_session.query(User.username).filter(User.id_ == p.user_id).one()[0])
@@ -117,7 +120,7 @@ def tag_search(tag_id, pagenum=1):
     if not tag:
         abort(405)
     tagged_posts = db_session.query(Tags).filter(Tags.tag_id == tag_id).all()
-    tagged_posts = [post.id_ for post in tagged_posts]
+    tagged_posts = [post.post_id for post in tagged_posts]
     posts, total_pages = get_all_tagged_posts(pagenum, db_session, tagged_posts)
 
     if pagenum > total_pages and total_pages != 0:
@@ -146,7 +149,9 @@ def user(id, edit=""):
 
     if request.method == "POST":
         desc = request.form["desc"]
+        email = request.form["email"]
         user.desc = desc
+        user.email = email
         db_session.commit()
         return redirect(url_for('user', id=id))
 
@@ -193,10 +198,6 @@ if __name__ == "__main__":
         print("Running server...")
         app.run(host=IP_addr, debug=True, port=int(port))
 
-    # http_server = WSGIServer((IP_addr, int(port)), app)
-    # print("Server running on http://{}:{}".format(IP_addr, port))
-    # try:
-    #     http_server.serve_forever()
     except KeyboardInterrupt:
         print("Exiting server")
         sys.exit(0)

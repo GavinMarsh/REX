@@ -3,10 +3,10 @@ import pdb
 from settings import DB_URL
 from sqlalchemy import create_engine, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Date
+from sqlalchemy import Column, Integer, String, DateTime, Date
 from passlib.hash import bcrypt
 from sqlalchemy.orm import sessionmaker, relationship
-from datetime import date
+from datetime import datetime, date
 
 from settings import tags
 
@@ -26,11 +26,13 @@ class User(Base):
     username = Column(String(20), unique=True)
     password = Column(String(20))
     desc = Column(String(100))
+    email = Column(String(100))
 
-    def __init__(self, username, password):
+    def __init__(self, username, password, email):
         """Create new instance."""
         self.username = username
         self.password = bcrypt.encrypt(password)
+        self.email = email
         self.desc = ""
 
     def validate_password(self, password):
@@ -53,9 +55,10 @@ class Referral(Base):
     turnover = Column(String(50))
     project_date = Column(Date)
     enum = Column(String(100))
-    timestamp = Column(Date)
+    timestamp = Column(DateTime)
     budget = Column(String(50))
     description = Column(String(2500))
+    processed = Column(String(50))
 
     request = relationship("Request", cascade="all,delete", backref="request")
     tag = relationship("Tags", cascade="all,delete", backref="tags")
@@ -72,7 +75,8 @@ class Referral(Base):
         if type(project_date) is date:
             self.project_date = project_date
         self.description = description
-        self.timestamp = date.today()
+        self.timestamp = datetime.now()
+        self.processed = "False"
 
     def update(self, title=None, turnover=None, budget=None, project_date=None, description=None, enum=None):
         """Create new instance."""
@@ -89,7 +93,7 @@ class Referral(Base):
                 self.project_date = project_date
         if description:
             self.description = description
-        self.timestamp = date.today()
+        self.timestamp = datetime.now()
 
     def __repr__(self):
         """Verbose object name."""
@@ -222,7 +226,7 @@ def setup(DB_URL):
     Session = sessionmaker(bind=engine)
     session = Session()
     # Add test
-    testuser = User("test", "test")
+    testuser = User("test", "test", "test@gmail.com")
     session.add(testuser)
     session.commit()
     # Add tags
@@ -238,13 +242,15 @@ if __name__ == "__main__":
     session = setup(DB_URL)
     session = get_debug_session(DB_URL)
 
+    testuser = User("chris", "chris", "chrisandrew119@gmail.com")
+    session.add(testuser)
     # Adding some fake data to test
     d = date.today()
-    for i in range(30):
-        testuser = User("test"+str(i), "test")
+    for i in range(3):
+        testuser = User("test"+str(i), "test", "test@gmail.com")
         session.add(testuser)
     session.commit()
-    for i in range(1, 31):
+    for i in range(1, 4):
         testuser = Referral(i, "Testing", "40000", "40000", d, "Testing project", "224RDF")
         session.add(testuser)
     session.commit()

@@ -28,10 +28,13 @@
         {% else %}
           <p>No (<a class="action" href="{{ url_for('subscribe', argument='S') }}">Subscribe</a>)</p>
         {% endif %}
+        <small>Emails will be sent to {{user.email}}</small>
       {% else %}
       <form method="post">
         <label for="desc">Description</label>
         <textarea name="desc" id="desc" required>{{user.desc}}</textarea>
+        <label for="email">Email ID</label>
+        <input type="email" name="email" id="email" value="{{user.email}}" required>
         <input type="submit" value="Save">
       </form>
       {% endif %}

@@ -14,7 +14,7 @@
         <div>
           <div class="about">
             by <a href="{{ url_for('user', id=post_user.id_) }}">{{ post_user.username }}</a>
-            on {{ post.timestamp.strftime('%Y-%m-%d') }}</div>
+            on {{ post.timestamp.strftime('%Y-%m-%d') }} at {{ post.timestamp.strftime('%H:%M') }}</div>
         </div>
 
         {% if user.id_ == post.user_id %}

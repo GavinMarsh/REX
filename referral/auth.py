@@ -41,6 +41,7 @@ def register():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        email = request.form['email']
         error = None
 
         if not username:
@@ -53,7 +54,7 @@ def register():
             error = 'User {0} is already registered.'.format(username)
 
         if error is None:
-            user = User(username, password)
+            user = User(username, password, email)
             db_session.add(user)
             db_session.commit()
             return redirect(url_for('auth.login'))
