@@ -239,19 +239,9 @@ def setup(DB_URL):
 
 
 if __name__ == "__main__":
+    print("Setting up database")
     session = setup(DB_URL)
-    session = get_debug_session(DB_URL)
-
-    testuser = User("chris", "chris", "chrisandrew119@gmail.com")
-    session.add(testuser)
-    # Adding some fake data to test
-    d = date.today()
-    for i in range(3):
-        testuser = User("test"+str(i), "test", "test@gmail.com")
-        session.add(testuser)
-    session.commit()
-    for i in range(1, 4):
-        testuser = Referral(i, "Testing", "40000", "40000", d, "Testing project", "224RDF")
-        session.add(testuser)
-    session.commit()
-    pdb.set_trace()
+    print("Done")
+    # session = get_debug_session(DB_URL)
+    #
+    # pdb.set_trace()
