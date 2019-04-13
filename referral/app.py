@@ -87,7 +87,6 @@ def index(pagenum=1):
 
 @app.route('/search', methods=['GET'])
 @app.route('/search/<int:pagenum>', methods=['GET'])
-@login_required
 def search(pagenum=1):
     """Search: Filter post by user"""
     user = get_user(session.get("user_id"), db_session)
