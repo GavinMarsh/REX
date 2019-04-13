@@ -6,6 +6,11 @@
 
 {% block header %}
   <h1>{% block title %}{{ post.title }}{% endblock %}</h1>
+  <div>
+    <b style="color:#377ba8;">Project Date:</b> {{post.project_date.strftime('%Y-%m-%d')}}
+    <br>
+    <b style="color:#377ba8;">Budget:</b> {{post.budget}}
+  </div>
 {% endblock %}
 
 {% block content %}
@@ -34,12 +39,6 @@
 
       <h3>Turnover</h3>
       <p>{{post.turnover}}</p>
-
-      <h3>Project Date</h3>
-      <p>{{post.project_date.strftime('%Y-%m-%d')}}</p>
-
-      <h3>Budget</h3>
-      <p>{{post.budget}}</p>
 
       <h3>Description</h3>
       <p class="body">{{ post.description }}</p>

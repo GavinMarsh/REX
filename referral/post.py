@@ -25,7 +25,7 @@ def record(state):
 def create():
     """Create a new post for the current user."""
     db_session = current_app.config["db_session"]
-    user = db_session.query(User).filter(User.id_ == session.get("user_id")).one()
+    user = db_session.query(User).filter(User.id_ == session.get("user_id")).first()
     if request.method == 'POST':
         content = {}
         content["user_id"] = user.id_
@@ -51,7 +51,7 @@ def view(id):
     """View a post"""
     db_session = current_app.config["db_session"]
     post = db_session.query(Referral).filter(Referral.id_ == id).first()
-    user = db_session.query(User).filter(User.id_ == session.get("user_id")).one()
+    user = db_session.query(User).filter(User.id_ == session.get("user_id")).first()
     if post is None:
         abort(404)
 
@@ -88,7 +88,7 @@ def update(id):
     """Update a post if the current user is the author."""
     db_session = current_app.config["db_session"]
     post = db_session.query(Referral).filter(Referral.id_ == id).first()
-    user = db_session.query(User).filter(User.id_ == session.get("user_id")).one()
+    user = db_session.query(User).filter(User.id_ == session.get("user_id")).first()
     if post is None:
         abort(404)
     if user.id_ != post.user_id:
@@ -117,7 +117,7 @@ def delete(id):
     """Delete a post if current user is author."""
     db_session = current_app.config["db_session"]
     post = db_session.query(Referral).filter(Referral.id_ == id).first()
-    user = db_session.query(User).filter(User.id_ == session.get("user_id")).one()
+    user = db_session.query(User).filter(User.id_ == session.get("user_id")).first()
     if post is None:
         abort(404)
     if user.id_ != post.user_id:
@@ -134,7 +134,7 @@ def request_post(post_id):
     """Update a post if the current user is the author."""
     db_session = current_app.config["db_session"]
     post = db_session.query(Referral).filter(Referral.id_ == post_id).first()
-    user = db_session.query(User).filter(User.id_ == session.get("user_id")).one()
+    user = db_session.query(User).filter(User.id_ == session.get("user_id")).first()
     if post is None:
         abort(404)
     if user.id_ == post.user_id:
@@ -152,7 +152,7 @@ def unrequest_post(post_id):
     """Update a post if the current user is the author."""
     db_session = current_app.config["db_session"]
     post = db_session.query(Referral).filter(Referral.id_ == post_id).first()
-    user = db_session.query(User).filter(User.id_ == session.get("user_id")).one()
+    user = db_session.query(User).filter(User.id_ == session.get("user_id")).first()
     if post is None:
         abort(404)
 
@@ -172,7 +172,7 @@ def tag_post(post_id):
     """Update a post if the current user is the author."""
     db_session = current_app.config["db_session"]
     post = db_session.query(Referral).filter(Referral.id_ == post_id).first()
-    user = db_session.query(User).filter(User.id_ == session.get("user_id")).one()
+    user = db_session.query(User).filter(User.id_ == session.get("user_id")).first()
     if post is None:
         abort(404)
     if user.id_ != post.user_id:
@@ -199,7 +199,7 @@ def untag_post(post_id):
     """Update a post if the current user is the author."""
     db_session = current_app.config["db_session"]
     post = db_session.query(Referral).filter(Referral.id_ == post_id).first()
-    user = db_session.query(User).filter(User.id_ == session.get("user_id")).one()
+    user = db_session.query(User).filter(User.id_ == session.get("user_id")).first()
     if post is None:
         abort(404)
     if user.id_ != post.user_id:
@@ -220,7 +220,7 @@ def award_post(post_id):
     """Search: Filter post by user"""
     db_session = current_app.config["db_session"]
     post = db_session.query(Referral).filter(Referral.id_ == post_id).first()
-    user = db_session.query(User).filter(User.id_ == session.get("user_id")).one()
+    user = db_session.query(User).filter(User.id_ == session.get("user_id")).first()
     if post is None:
         abort(404)
     if user.id_ != post.user_id:
@@ -246,7 +246,7 @@ def unaward_post(post_id):
     """Search: Filter post by user"""
     db_session = current_app.config["db_session"]
     post = db_session.query(Referral).filter(Referral.id_ == post_id).first()
-    user = db_session.query(User).filter(User.id_ == session.get("user_id")).one()
+    user = db_session.query(User).filter(User.id_ == session.get("user_id")).first()
     if post is None:
         abort(404)
     if user.id_ != post.user_id:
@@ -267,7 +267,7 @@ def add_comment(post_id):
     """Search: Filter post by user"""
     db_session = current_app.config["db_session"]
     post = db_session.query(Referral).filter(Referral.id_ == post_id).first()
-    user = db_session.query(User).filter(User.id_ == session.get("user_id")).one()
+    user = db_session.query(User).filter(User.id_ == session.get("user_id")).first()
     if post is None:
         abort(404)
 
@@ -283,7 +283,7 @@ def add_comment(post_id):
 def delete_comment(comment_id, post_id):
     """Search: Filter post by user"""
     db_session = current_app.config["db_session"]
-    user = db_session.query(User).filter(User.id_ == session.get("user_id")).one()
+    user = db_session.query(User).filter(User.id_ == session.get("user_id")).first()
     comment = db_session.query(Comment).filter(Comment.id_ == comment_id).first()
     if comment is None:
         abort(404)

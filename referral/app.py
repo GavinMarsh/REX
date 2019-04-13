@@ -31,7 +31,7 @@ app.register_blueprint(rss)
 
 
 def get_user(user_id, db_session):
-    user = db_session.query(User).filter(User.id_ == user_id).one()
+    user = db_session.query(User).filter(User.id_ == user_id).first()
     return user
 
 
@@ -73,7 +73,6 @@ def get_all_user_posts(pagenum, db_session, user_id):
 
 @app.route('/', methods=["GET"])
 @app.route('/<int:pagenum>', methods=["GET"])
-@login_required
 def index(pagenum=1):
     """Show all the posts, most recent first."""
     user = get_user(session.get("user_id"), db_session)
