@@ -12,15 +12,24 @@
   {% if no_posts is sameas false %}
     <h4> No posts with this tag. </h4>
   {% endif %}
-  {% for post, username in posts %}
+  {% for post, username, req in posts %}
     <article class="post">
       <header>
         <div>
           <h1><a class="action" href="{{url_for('post.view', id=post.id_)}}">{{ post.title }}</a></h1>
+          <p><b>Project date:</b> {{post.project_date.strftime('%Y-%m-%d')}} <br> <b>Budget:</b> {{post.budget}} </p>
           <div class="about">by {{ username }} on {{ post.timestamp.strftime('%Y-%m-%d') }} at {{ post.timestamp.strftime('%H:%M') }}</div>
         </div>
         {% if user.id_ == post.user_id %}
           <a href="{{ url_for('post.update', id=post.id_) }}">Edit</a>
+        {% else %}
+        <div class="action">
+          {% if req %}
+            <h1><a class="action" href="{{ url_for('post.unrequest_post', post_id=post.id_) }}">Unrequest</a><h1>
+          {% else %}
+            <h1><a class="action" href="{{ url_for('post.request_post', post_id=post.id_) }}">Request</a><h1>
+          {% endif %}
+        </div>
         {% endif %}
       </header>
     </article>

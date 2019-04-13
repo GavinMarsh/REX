@@ -19,7 +19,7 @@
   <input type="date" name="project_date" id="project_date" value="{{post.project_date.strftime('%Y-%m-%d')}}" required>
 
   <label for="budget">Budget</label>
-  <input type="number" name="budget" id="budget" value="{{post.budget}}" required>
+  <input name="budget" id="budget" value="{{post.budget}}" required>
 
   <label for="desc">Description</label>
   <textarea name="desc" id="desc" required>{{post.description}}</textarea>

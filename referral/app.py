@@ -71,6 +71,17 @@ def get_all_user_posts(pagenum, db_session, user_id):
     return users_posts, total_pages
 
 
+def has_requested(posts):
+    uid = session.get("user_id")
+    if uid is None:
+        return [p + (None,) for p in posts]
+    posts_requested = []
+    for p in posts:
+        requested = db_session.query(Request).filter(Request.user_id == uid, Request.post_id == p[0].id_).first()
+        posts_requested.append(p + (requested, ))
+    return posts_requested
+
+
 @app.route('/', methods=["GET"])
 @app.route('/<int:pagenum>', methods=["GET"])
 def index(pagenum=1):
@@ -80,7 +91,7 @@ def index(pagenum=1):
 
     if pagenum > total_pages and total_pages != 0:
         abort(404)
-
+    posts = has_requested(posts)
     return render_template('blog/index.html', user=user, posts=posts,
                            pagenum=pagenum, total_pages=total_pages)
 
@@ -101,6 +112,7 @@ def search(pagenum=1):
     if pagenum > total_pages and total_pages != 0:
         abort(404)
 
+    posts = has_requested(posts)
     no_posts = len(posts) > 0
 
     return render_template('blog/search.html', user=user, posts=posts,
@@ -124,6 +136,7 @@ def tag_search(tag_id, pagenum=1):
     if pagenum > total_pages and total_pages != 0:
         abort(404)
 
+    posts = has_requested(posts)
     no_posts = len(posts) > 0
 
     return render_template('blog/tagged.html', user=user, posts=posts,

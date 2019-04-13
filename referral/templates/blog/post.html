@@ -6,11 +6,16 @@
 
 {% block header %}
   <h1>{% block title %}{{ post.title }}{% endblock %}</h1>
-  <div>
-    <b style="color:#377ba8;">Project Date:</b> {{post.project_date.strftime('%Y-%m-%d')}}
-    <br>
-    <b style="color:#377ba8;">Budget:</b> {{post.budget}}
-  </div>
+  {% if user.id_ == post.user_id %}
+  <a class="action" href="{{ url_for('post.update', id=post.id_) }}">Edit</a>
+  {% else %}
+    {% if has_requested is sameas true %}
+    <a class="action" href="{{ url_for('post.unrequest_post', post_id=post.id_) }}">Unrequest</a>
+    {% else %}
+    <a class="action" href="{{ url_for('post.request_post', post_id=post.id_) }}">Request</a>
+    {% endif %}
+  {% endif %}
+
 {% endblock %}
 
 {% block content %}
@@ -21,21 +26,16 @@
             by <a href="{{ url_for('user', id=post_user.id_) }}">{{ post_user.username }}</a>
             on {{ post.timestamp.strftime('%Y-%m-%d') }} at {{ post.timestamp.strftime('%H:%M') }}</div>
         </div>
-
-        {% if user.id_ == post.user_id %}
-        <a class="action" href="{{ url_for('post.update', id=post.id_) }}">Edit</a>
-        {% else %}
-          {% if has_requested is sameas true %}
-          <a class="action" href="{{ url_for('post.unrequest_post', post_id=post.id_) }}">Unrequest</a>
-          {% else %}
-          <a class="action" href="{{ url_for('post.request_post', post_id=post.id_) }}">Request</a>
-          {% endif %}
-        {% endif %}
-
       </header>
 
       <h3>Employee Number</h3>
       <p>{{post.enum}}</p>
+
+      <h3>Project Date</h3>
+      <p>{{post.project_date.strftime('%Y-%m-%d')}}</p>
+
+      <h3>Budget</h3>
+      <p>{{post.budget}}</p>
 
       <h3>Turnover</h3>
       <p>{{post.turnover}}</p>
