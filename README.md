@@ -1,7 +1,7 @@
 # referral
 An application for users to give each other referrals.
 
-## Deployement instructions:
+## Deployment instructions:
 - Create a virtualenv using Python3:
   ```
   $ virtualenv -p /usr/bin/python3 venv
