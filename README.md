@@ -10,6 +10,9 @@ An application for users to give each other referrals.
 - Install requirements.
   ```
   (venv)$ pip install -r requirements.txt
+ if above does not work try
+  sudo python -m pip install -r requirements.txt
+
   ```
 - Edit `settings.py` to specify the database, posts per page and default tags.
   ```pytohn
