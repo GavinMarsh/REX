@@ -23,6 +23,7 @@ An application for users to give each other referrals.
   ```
 - Build database and models and insert initial data.
   ```
+  (venv)$ cd referral
   (venv)$ python models.py
   // A default user called test will be created (username:test, password:test)
   ```
