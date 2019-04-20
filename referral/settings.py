@@ -14,4 +14,4 @@ Key = "sgjngfdfg//23/=+342][234097824-1<><123><!@#$#%^]"
 
 # App specific settings
 post_limit = 5
-tags = ["tag_1", "tag_2", "tag_3"]
+tags = ["gamification", "iptelephony", "office_move", "contact_center"]
