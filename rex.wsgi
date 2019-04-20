@@ -3,7 +3,7 @@
 import sys
 
 # add your project directory to the sys.path
-project_home = u'/var/www/referral/'
+project_home = u'/var/www/REX/'
 if project_home not in sys.path:
     sys.path = [project_home] + sys.path
 
